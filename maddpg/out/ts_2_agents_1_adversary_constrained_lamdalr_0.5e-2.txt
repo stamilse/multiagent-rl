@@ -1,0 +1,219 @@
+(py36) amrita@amritas-MacBook-Pro:~/Workspace/maddpg/experiments (master)$ python train.py --scenario simple_push --num-adversaries 1
+2018-10-22 22:10:01.259708: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+<tf.Variable 'agent_0/q_func/fully_connected/weights:0' shape=(37, 64) dtype=float32_ref> Tensor("agent_0/gradients/agent_0/q_func/fully_connected/MatMul_grad/tuple/control_dependency_1:0", shape=(37, 64), dtype=float32)
+<tf.Variable 'agent_0/q_func/fully_connected/biases:0' shape=(64,) dtype=float32_ref> Tensor("agent_0/gradients/agent_0/q_func/fully_connected/BiasAdd_grad/tuple/control_dependency_1:0", shape=(64,), dtype=float32)
+<tf.Variable 'agent_0/q_func/fully_connected_1/weights:0' shape=(64, 64) dtype=float32_ref> Tensor("agent_0/gradients/agent_0/q_func/fully_connected_1/MatMul_grad/tuple/control_dependency_1:0", shape=(64, 64), dtype=float32)
+<tf.Variable 'agent_0/q_func/fully_connected_1/biases:0' shape=(64,) dtype=float32_ref> Tensor("agent_0/gradients/agent_0/q_func/fully_connected_1/BiasAdd_grad/tuple/control_dependency_1:0", shape=(64,), dtype=float32)
+<tf.Variable 'agent_0/q_func/fully_connected_2/weights:0' shape=(64, 1) dtype=float32_ref> Tensor("agent_0/gradients/agent_0/q_func/fully_connected_2/MatMul_grad/tuple/control_dependency_1:0", shape=(64, 1), dtype=float32)
+<tf.Variable 'agent_0/q_func/fully_connected_2/biases:0' shape=(1,) dtype=float32_ref> Tensor("agent_0/gradients/agent_0/q_func/fully_connected_2/BiasAdd_grad/tuple/control_dependency_1:0", shape=(1,), dtype=float32)
+<tf.Variable 'agent_0/lamda_constraint0:0' shape=(1,) dtype=float32_ref> Tensor("agent_0/gradients_1/agent_0/mul_grad/tuple/control_dependency:0", shape=(1,), dtype=float32)
+<tf.Variable 'agent_0/p_func/fully_connected/weights:0' shape=(8, 64) dtype=float32_ref> Tensor("agent_0_1/gradients/agent_0_1/p_func/fully_connected/MatMul_grad/tuple/control_dependency_1:0", shape=(8, 64), dtype=float32)
+<tf.Variable 'agent_0/p_func/fully_connected/biases:0' shape=(64,) dtype=float32_ref> Tensor("agent_0_1/gradients/agent_0_1/p_func/fully_connected/BiasAdd_grad/tuple/control_dependency_1:0", shape=(64,), dtype=float32)
+<tf.Variable 'agent_0/p_func/fully_connected_1/weights:0' shape=(64, 64) dtype=float32_ref> Tensor("agent_0_1/gradients/agent_0_1/p_func/fully_connected_1/MatMul_grad/tuple/control_dependency_1:0", shape=(64, 64), dtype=float32)
+<tf.Variable 'agent_0/p_func/fully_connected_1/biases:0' shape=(64,) dtype=float32_ref> Tensor("agent_0_1/gradients/agent_0_1/p_func/fully_connected_1/BiasAdd_grad/tuple/control_dependency_1:0", shape=(64,), dtype=float32)
+<tf.Variable 'agent_0/p_func/fully_connected_2/weights:0' shape=(64, 5) dtype=float32_ref> Tensor("agent_0_1/gradients/agent_0_1/p_func/fully_connected_2/MatMul_grad/tuple/control_dependency_1:0", shape=(64, 5), dtype=float32)
+<tf.Variable 'agent_0/p_func/fully_connected_2/biases:0' shape=(5,) dtype=float32_ref> Tensor("agent_0_1/gradients/agent_0_1/p_func/fully_connected_2/BiasAdd_grad/tuple/control_dependency_1:0", shape=(5,), dtype=float32)
+<tf.Variable 'agent_1/q_func/fully_connected/weights:0' shape=(37, 64) dtype=float32_ref> Tensor("agent_1/gradients/agent_1/q_func/fully_connected/MatMul_grad/tuple/control_dependency_1:0", shape=(37, 64), dtype=float32)
+<tf.Variable 'agent_1/q_func/fully_connected/biases:0' shape=(64,) dtype=float32_ref> Tensor("agent_1/gradients/agent_1/q_func/fully_connected/BiasAdd_grad/tuple/control_dependency_1:0", shape=(64,), dtype=float32)
+<tf.Variable 'agent_1/q_func/fully_connected_1/weights:0' shape=(64, 64) dtype=float32_ref> Tensor("agent_1/gradients/agent_1/q_func/fully_connected_1/MatMul_grad/tuple/control_dependency_1:0", shape=(64, 64), dtype=float32)
+<tf.Variable 'agent_1/q_func/fully_connected_1/biases:0' shape=(64,) dtype=float32_ref> Tensor("agent_1/gradients/agent_1/q_func/fully_connected_1/BiasAdd_grad/tuple/control_dependency_1:0", shape=(64,), dtype=float32)
+<tf.Variable 'agent_1/q_func/fully_connected_2/weights:0' shape=(64, 1) dtype=float32_ref> Tensor("agent_1/gradients/agent_1/q_func/fully_connected_2/MatMul_grad/tuple/control_dependency_1:0", shape=(64, 1), dtype=float32)
+<tf.Variable 'agent_1/q_func/fully_connected_2/biases:0' shape=(1,) dtype=float32_ref> Tensor("agent_1/gradients/agent_1/q_func/fully_connected_2/BiasAdd_grad/tuple/control_dependency_1:0", shape=(1,), dtype=float32)
+<tf.Variable 'agent_1/lamda_constraint1:0' shape=(1,) dtype=float32_ref> Tensor("agent_1/gradients_1/agent_1/mul_grad/tuple/control_dependency:0", shape=(1,), dtype=float32)
+<tf.Variable 'agent_1/p_func/fully_connected/weights:0' shape=(19, 64) dtype=float32_ref> Tensor("agent_1_1/gradients/agent_1_1/p_func/fully_connected/MatMul_grad/tuple/control_dependency_1:0", shape=(19, 64), dtype=float32)
+<tf.Variable 'agent_1/p_func/fully_connected/biases:0' shape=(64,) dtype=float32_ref> Tensor("agent_1_1/gradients/agent_1_1/p_func/fully_connected/BiasAdd_grad/tuple/control_dependency_1:0", shape=(64,), dtype=float32)
+<tf.Variable 'agent_1/p_func/fully_connected_1/weights:0' shape=(64, 64) dtype=float32_ref> Tensor("agent_1_1/gradients/agent_1_1/p_func/fully_connected_1/MatMul_grad/tuple/control_dependency_1:0", shape=(64, 64), dtype=float32)
+<tf.Variable 'agent_1/p_func/fully_connected_1/biases:0' shape=(64,) dtype=float32_ref> Tensor("agent_1_1/gradients/agent_1_1/p_func/fully_connected_1/BiasAdd_grad/tuple/control_dependency_1:0", shape=(64,), dtype=float32)
+<tf.Variable 'agent_1/p_func/fully_connected_2/weights:0' shape=(64, 5) dtype=float32_ref> Tensor("agent_1_1/gradients/agent_1_1/p_func/fully_connected_2/MatMul_grad/tuple/control_dependency_1:0", shape=(64, 5), dtype=float32)
+<tf.Variable 'agent_1/p_func/fully_connected_2/biases:0' shape=(5,) dtype=float32_ref> Tensor("agent_1_1/gradients/agent_1_1/p_func/fully_connected_2/BiasAdd_grad/tuple/control_dependency_1:0", shape=(5,), dtype=float32)
+Using good policy maddpg and adv policy maddpg
+Starting iterations...
+steps: 24975, episodes: 1000, mean episode reward: -27.299952115365457, agent episode reward: [-0.6431296311672395, -26.656822484198223], time: 39.103
+/anaconda2/envs/py36/lib/python3.6/site-packages/numpy/core/fromnumeric.py:2920: RuntimeWarning: Mean of empty slice.
+  out=out, **kwargs)
+/anaconda2/envs/py36/lib/python3.6/site-packages/numpy/core/_methods.py:85: RuntimeWarning: invalid value encountered in double_scalars
+  ret = ret.dtype.type(ret / rcount)
+Running avgs for agent 0: q_loss: nan, q_loss2: nan, p_loss: nan, mean_rew: nan, var_rew: nan
+Running avgs for agent 1: q_loss: nan, q_loss2: nan, p_loss: nan, mean_rew: nan, var_rew: nan
+steps: 49975, episodes: 2000, mean episode reward: -23.03859735697437, agent episode reward: [-4.471203996527646, -18.567393360446722], time: 57.823
+Running avgs for agent 0: q_loss: 0.9837532639503479, q_loss2: -0.9796461462974548, p_loss: -0.010403426364064217, mean_rew: -0.05164302365589203, var_rew: 0.6408453763142722
+Running avgs for agent 1: q_loss: 0.7662967443466187, q_loss2: -0.7569670081138611, p_loss: 1.4776209592819214, mean_rew: -1.0673723703501106, var_rew: 0.48665382053933237
+^[[Bsteps: 74975, episodes: 3000, mean episode reward: -11.319811399976727, agent episode reward: [-4.249439020983096, -7.070372378993632], time: 56.93
+Running avgs for agent 0: q_loss: 1.186333179473877, q_loss2: -1.1861448287963867, p_loss: 0.18754041194915771, mean_rew: -0.11753970233951935, var_rew: 0.4718803122397533
+Running avgs for agent 1: q_loss: 1.3446687459945679, q_loss2: -1.3447970151901245, p_loss: 2.1352293491363525, mean_rew: -0.78801339778547, var_rew: 0.5052901744093452
+steps: 99975, episodes: 4000, mean episode reward: -9.766347476797549, agent episode reward: [-2.9159595830560012, -6.850387893741549], time: 57.085
+Running avgs for agent 0: q_loss: 1.2375367879867554, q_loss2: -1.237592339515686, p_loss: 0.387910395860672, mean_rew: -0.12385706978342767, var_rew: 0.3695925847812566
+Running avgs for agent 1: q_loss: 1.7388542890548706, q_loss2: -1.739044427871704, p_loss: 2.4629642963409424, mean_rew: -0.6384157855183284, var_rew: 0.4661430185480024
+steps: 124975, episodes: 5000, mean episode reward: -9.574083131580581, agent episode reward: [-2.7371283319361353, -6.8369547996444435], time: 57.047
+Running avgs for agent 0: q_loss: 1.2775464057922363, q_loss2: -1.2753593921661377, p_loss: 0.5501732230186462, mean_rew: -0.12068933378161963, var_rew: 0.3122887256929615
+Running avgs for agent 1: q_loss: 2.0112972259521484, q_loss2: -2.0114529132843018, p_loss: 2.539283275604248, mean_rew: -0.5572485713138902, var_rew: 0.4273771747533255
+steps: 149975, episodes: 6000, mean episode reward: -9.193812252569595, agent episode reward: [-2.419921022859926, -6.773891229709671], time: 57.083
+Running avgs for agent 0: q_loss: 1.31461501121521, q_loss2: -1.3128702640533447, p_loss: 0.6940881609916687, mean_rew: -0.11933406934948854, var_rew: 0.2808905920975262
+Running avgs for agent 1: q_loss: 2.1944165229797363, q_loss2: -2.1943886280059814, p_loss: 2.4975359439849854, mean_rew: -0.5049756763897104, var_rew: 0.3907603427637643
+steps: 174975, episodes: 7000, mean episode reward: -8.8386997762728, agent episode reward: [-2.3675675160051193, -6.471132260267683], time: 58.074
+Running avgs for agent 0: q_loss: 1.350138783454895, q_loss2: -1.3475233316421509, p_loss: 0.7739459276199341, mean_rew: -0.11587452623169506, var_rew: 0.2560878738883203
+Running avgs for agent 1: q_loss: 2.328975200653076, q_loss2: -2.3288252353668213, p_loss: 2.4096453189849854, mean_rew: -0.46900676436267147, var_rew: 0.36270173601874683
+steps: 199975, episodes: 8000, mean episode reward: -8.728011634950752, agent episode reward: [-1.6589443884479373, -7.069067246502815], time: 57.68
+Running avgs for agent 0: q_loss: 1.3757795095443726, q_loss2: -1.3728458881378174, p_loss: 0.8083646297454834, mean_rew: -0.10965933313174839, var_rew: 0.23549158505667903
+Running avgs for agent 1: q_loss: 2.4768590927124023, q_loss2: -2.4767823219299316, p_loss: 2.324533224105835, mean_rew: -0.44225619905753694, var_rew: 0.3422851788777338
+steps: 224975, episodes: 9000, mean episode reward: -8.702017943483948, agent episode reward: [-1.5936799174748502, -7.108338026009098], time: 57.481
+Running avgs for agent 0: q_loss: 1.4320517778396606, q_loss2: -1.4291503429412842, p_loss: 0.8092077374458313, mean_rew: -0.10460799311230898, var_rew: 0.22345637343583497
+Running avgs for agent 1: q_loss: 2.6214370727539062, q_loss2: -2.621011257171631, p_loss: 2.2651479244232178, mean_rew: -0.4239672416039168, var_rew: 0.32635350257613477
+steps: 249975, episodes: 10000, mean episode reward: -8.664952796282643, agent episode reward: [-2.025699643359637, -6.639253152923007], time: 58.378
+Running avgs for agent 0: q_loss: 1.4756453037261963, q_loss2: -1.4724680185317993, p_loss: 0.7995184063911438, mean_rew: -0.10220490233813394, var_rew: 0.21202883364015662
+Running avgs for agent 1: q_loss: 2.7080399990081787, q_loss2: -2.7077584266662598, p_loss: 2.2027175426483154, mean_rew: -0.4083732289693652, var_rew: 0.30832888300551653
+steps: 274975, episodes: 11000, mean episode reward: -8.930906251151242, agent episode reward: [-2.164302242942772, -6.7666040082084695], time: 58.081
+Running avgs for agent 0: q_loss: 1.5144400596618652, q_loss2: -1.5113173723220825, p_loss: 0.7878666520118713, mean_rew: -0.10017892730753865, var_rew: 0.2020868949099928
+Running avgs for agent 1: q_loss: 2.8641586303710938, q_loss2: -2.8634955883026123, p_loss: 2.155911922454834, mean_rew: -0.39580473046331394, var_rew: 0.2992014557472677
+steps: 299975, episodes: 12000, mean episode reward: -9.229676852773627, agent episode reward: [-2.5284936138500997, -6.7011832389235275], time: 58.36
+Running avgs for agent 0: q_loss: 1.5695146322250366, q_loss2: -1.5659370422363281, p_loss: 0.7754999995231628, mean_rew: -0.09967229610001445, var_rew: 0.19467907788157562
+Running avgs for agent 1: q_loss: 2.9688966274261475, q_loss2: -2.9680228233337402, p_loss: 2.1054844856262207, mean_rew: -0.3842213724494716, var_rew: 0.2876052508620155
+steps: 324975, episodes: 13000, mean episode reward: -8.941791481808988, agent episode reward: [-2.1376163268397614, -6.804175154969228], time: 58.207
+Running avgs for agent 0: q_loss: 1.6275012493133545, q_loss2: -1.6244406700134277, p_loss: 0.7736183404922485, mean_rew: -0.09916846202846114, var_rew: 0.18911008791028505
+Running avgs for agent 1: q_loss: 3.0614876747131348, q_loss2: -3.060654878616333, p_loss: 2.0561459064483643, mean_rew: -0.37305152269686914, var_rew: 0.2766963115568676
+steps: 349975, episodes: 14000, mean episode reward: -8.694232939930187, agent episode reward: [-1.6927983263696564, -7.001434613560531], time: 57.518
+Running avgs for agent 0: q_loss: 1.6890236139297485, q_loss2: -1.6855299472808838, p_loss: 0.7680683732032776, mean_rew: -0.09806551844015224, var_rew: 0.18376973095309138
+Running avgs for agent 1: q_loss: 3.202338457107544, q_loss2: -3.2015368938446045, p_loss: 2.0377912521362305, mean_rew: -0.36806196099666966, var_rew: 0.27063286198021763
+steps: 374975, episodes: 15000, mean episode reward: -8.906623302544315, agent episode reward: [-1.5703815157715886, -7.336241786772726], time: 57.755
+Running avgs for agent 0: q_loss: 1.7482287883758545, q_loss2: -1.7452059984207153, p_loss: 0.76446533203125, mean_rew: -0.09595838597634532, var_rew: 0.17907635369449929
+Running avgs for agent 1: q_loss: 3.31972599029541, q_loss2: -3.319204807281494, p_loss: 2.012699604034424, mean_rew: -0.3616890857554288, var_rew: 0.2637757100157108
+steps: 399975, episodes: 16000, mean episode reward: -8.407340324026919, agent episode reward: [-1.3235890828820407, -7.083751241144876], time: 57.541
+Running avgs for agent 0: q_loss: 1.803815484046936, q_loss2: -1.8005231618881226, p_loss: 0.7376592755317688, mean_rew: -0.09290855087317026, var_rew: 0.17433850294756673
+Running avgs for agent 1: q_loss: 3.4358630180358887, q_loss2: -3.4348959922790527, p_loss: 1.991213083267212, mean_rew: -0.3555741819764154, var_rew: 0.2572388271915029
+steps: 424975, episodes: 17000, mean episode reward: -8.736140655281396, agent episode reward: [-1.318377502968723, -7.417763152312675], time: 57.476
+Running avgs for agent 0: q_loss: 1.8984931707382202, q_loss2: -1.8944059610366821, p_loss: 0.7057545185089111, mean_rew: -0.09069221117430058, var_rew: 0.17234151236930012
+Running avgs for agent 1: q_loss: 3.6133272647857666, q_loss2: -3.612476348876953, p_loss: 1.995627522468567, mean_rew: -0.3539541933502138, var_rew: 0.2549578749918404
+steps: 449975, episodes: 18000, mean episode reward: -8.46384117043795, agent episode reward: [-1.4256663726122545, -7.038174797825696], time: 57.503
+Running avgs for agent 0: q_loss: 1.9929020404815674, q_loss2: -1.9893423318862915, p_loss: 0.6700623631477356, mean_rew: -0.08756509033627177, var_rew: 0.1708584626828032
+Running avgs for agent 1: q_loss: 3.7381157875061035, q_loss2: -3.73716402053833, p_loss: 1.9848606586456299, mean_rew: -0.35001772976831236, var_rew: 0.24987667628125468
+steps: 474975, episodes: 19000, mean episode reward: -8.736606573289974, agent episode reward: [-1.8341942269545835, -6.9024123463353915], time: 57.424
+Running avgs for agent 0: q_loss: 2.025369167327881, q_loss2: -2.0213351249694824, p_loss: 0.6328140497207642, mean_rew: -0.0857603255748842, var_rew: 0.16552282980992086
+Running avgs for agent 1: q_loss: 3.8846428394317627, q_loss2: -3.883427143096924, p_loss: 1.9778616428375244, mean_rew: -0.3462812073030932, var_rew: 0.24631072170956766
+steps: 499975, episodes: 20000, mean episode reward: -8.851978574213616, agent episode reward: [-1.7264074179538036, -7.125571156259812], time: 57.61
+Running avgs for agent 0: q_loss: 2.1034607887268066, q_loss2: -2.099600076675415, p_loss: 0.6065583229064941, mean_rew: -0.08525252875125947, var_rew: 0.16337110898898777
+Running avgs for agent 1: q_loss: 3.9976890087127686, q_loss2: -3.9964091777801514, p_loss: 1.969093918800354, mean_rew: -0.3434809955195579, var_rew: 0.24143709281615913
+steps: 524975, episodes: 21000, mean episode reward: -8.934100101818569, agent episode reward: [-2.1393274701433183, -6.794772631675251], time: 57.323
+Running avgs for agent 0: q_loss: 2.2087738513946533, q_loss2: -2.205157995223999, p_loss: 0.595474123954773, mean_rew: -0.08623274155184148, var_rew: 0.16263641950224098
+Running avgs for agent 1: q_loss: 4.108617305755615, q_loss2: -4.107532501220703, p_loss: 1.9509265422821045, mean_rew: -0.3384538803848739, var_rew: 0.23697158747866787
+steps: 549975, episodes: 22000, mean episode reward: -8.659758629787248, agent episode reward: [-1.6743817398060399, -6.985376889981207], time: 58.651
+Running avgs for agent 0: q_loss: 2.267693519592285, q_loss2: -2.2634871006011963, p_loss: 0.5771212577819824, mean_rew: -0.085778333085514, var_rew: 0.15956802080914315
+Running avgs for agent 1: q_loss: 4.2550201416015625, q_loss2: -4.254040241241455, p_loss: 1.9420441389083862, mean_rew: -0.3360562992893612, var_rew: 0.23436574241451938
+steps: 574975, episodes: 23000, mean episode reward: -8.814843487568368, agent episode reward: [-1.9807080006094597, -6.834135486958906], time: 58.734
+Running avgs for agent 0: q_loss: 2.355607271194458, q_loss2: -2.351356029510498, p_loss: 0.5628017783164978, mean_rew: -0.08518462899439797, var_rew: 0.15812760505643245
+Running avgs for agent 1: q_loss: 4.438225746154785, q_loss2: -4.436712741851807, p_loss: 1.9325588941574097, mean_rew: -0.3350894447912138, var_rew: 0.23327919391438337
+steps: 599975, episodes: 24000, mean episode reward: -8.654081826811353, agent episode reward: [-1.7926303712653033, -6.86145145554605], time: 59.425
+Running avgs for agent 0: q_loss: 2.4128079414367676, q_loss2: -2.4099040031433105, p_loss: 0.5486605167388916, mean_rew: -0.08563894441483731, var_rew: 0.15565329123638394
+Running avgs for agent 1: q_loss: 4.531686782836914, q_loss2: -4.5309882164001465, p_loss: 1.9016598463058472, mean_rew: -0.33002435580375067, var_rew: 0.22892402654196528
+steps: 624975, episodes: 25000, mean episode reward: -8.855563083383736, agent episode reward: [-2.2367005095590877, -6.6188625738246465], time: 57.587
+Running avgs for agent 0: q_loss: 2.4766552448272705, q_loss2: -2.472172260284424, p_loss: 0.5268277525901794, mean_rew: -0.0836276358497577, var_rew: 0.1531786705644534
+Running avgs for agent 1: q_loss: 4.701529502868652, q_loss2: -4.7009148597717285, p_loss: 1.8860304355621338, mean_rew: -0.3284905581512363, var_rew: 0.22767650824318006
+steps: 649975, episodes: 26000, mean episode reward: -8.68519636489737, agent episode reward: [-2.141940129770125, -6.543256235127246], time: 57.585
+Running avgs for agent 0: q_loss: 2.569929599761963, q_loss2: -2.566927194595337, p_loss: 0.5206888318061829, mean_rew: -0.08485643809579525, var_rew: 0.152494558729746
+Running avgs for agent 1: q_loss: 4.89909553527832, q_loss2: -4.897980213165283, p_loss: 1.8664950132369995, mean_rew: -0.32648643165477303, var_rew: 0.22730817315798157
+^R  
+steps: 674975, episodes: 27000, mean episode reward: -8.756980378101318, agent episode reward: [-1.86023239820247, -6.896747979898846], time: 57.843
+Running avgs for agent 0: q_loss: 2.666269540786743, q_loss2: -2.6625654697418213, p_loss: 0.510922372341156, mean_rew: -0.08409408666868144, var_rew: 0.15170234302982416
+Running avgs for agent 1: q_loss: 5.023355007171631, q_loss2: -5.02099609375, p_loss: 1.8388289213180542, mean_rew: -0.3241651603378991, var_rew: 0.22428193719772144
+steps: 699975, episodes: 28000, mean episode reward: -8.791405895264514, agent episode reward: [-2.1825963543813756, -6.608809540883136], time: 57.479
+Running avgs for agent 0: q_loss: 2.784528970718384, q_loss2: -2.781541109085083, p_loss: 0.5132204294204712, mean_rew: -0.08390147023236945, var_rew: 0.15181451778443222
+Running avgs for agent 1: q_loss: 5.156865119934082, q_loss2: -5.155798435211182, p_loss: 1.8130794763565063, mean_rew: -0.3226219672790763, var_rew: 0.22221134419619284
+steps: 724975, episodes: 29000, mean episode reward: -8.639182375303648, agent episode reward: [-2.0505131505769514, -6.588669224726697], time: 57.628
+Running avgs for agent 0: q_loss: 2.857229709625244, q_loss2: -2.8536810874938965, p_loss: 0.5106390714645386, mean_rew: -0.08478991537138927, var_rew: 0.15017960966474728
+Running avgs for agent 1: q_loss: 5.308046817779541, q_loss2: -5.307261943817139, p_loss: 1.7882206439971924, mean_rew: -0.3199114517302257, var_rew: 0.22062649757321492
+steps: 749975, episodes: 30000, mean episode reward: -8.60723303141475, agent episode reward: [-1.8805206195916588, -6.726712411823091], time: 57.465
+Running avgs for agent 0: q_loss: 2.887876510620117, q_loss2: -2.8846817016601562, p_loss: 0.5144697427749634, mean_rew: -0.08489919016939888, var_rew: 0.14735268697149137
+Running avgs for agent 1: q_loss: 5.488653182983398, q_loss2: -5.487611293792725, p_loss: 1.7715668678283691, mean_rew: -0.3197673799370699, var_rew: 0.21996262205976308
+steps: 774975, episodes: 31000, mean episode reward: -8.838611670386396, agent episode reward: [-1.887055890742605, -6.9515557796437895], time: 57.488
+Running avgs for agent 0: q_loss: 3.0561771392822266, q_loss2: -3.052234411239624, p_loss: 0.50162273645401, mean_rew: -0.08284203127680667, var_rew: 0.14905481048104932
+Running avgs for agent 1: q_loss: 5.5921454429626465, q_loss2: -5.591176986694336, p_loss: 1.732884407043457, mean_rew: -0.31567935896849453, var_rew: 0.21707133552973468
+steps: 799975, episodes: 32000, mean episode reward: -8.49903850032502, agent episode reward: [-1.7708287260972586, -6.728209774227762], time: 57.597
+Running avgs for agent 0: q_loss: 3.131401300430298, q_loss2: -3.1278765201568604, p_loss: 0.49841272830963135, mean_rew: -0.08317214263665985, var_rew: 0.14777513032541711
+Running avgs for agent 1: q_loss: 5.751822471618652, q_loss2: -5.7515153884887695, p_loss: 1.72381591796875, mean_rew: -0.31652011148921483, var_rew: 0.21610244177100638
+steps: 824975, episodes: 33000, mean episode reward: -8.299874215741468, agent episode reward: [-1.2948877725363854, -7.004986443205084], time: 57.506
+Running avgs for agent 0: q_loss: 3.1683452129364014, q_loss2: -3.1657543182373047, p_loss: 0.4943999648094177, mean_rew: -0.08315720281578247, var_rew: 0.14554468674965296
+Running avgs for agent 1: q_loss: 5.906955242156982, q_loss2: -5.905363082885742, p_loss: 1.716399908065796, mean_rew: -0.3143745147145459, var_rew: 0.2147750199194354
+steps: 849975, episodes: 34000, mean episode reward: -8.425627502278877, agent episode reward: [-1.4061725563654008, -7.019454945913474], time: 57.428
+Running avgs for agent 0: q_loss: 3.203028917312622, q_loss2: -3.1995298862457275, p_loss: 0.4740813970565796, mean_rew: -0.08120989062655534, var_rew: 0.14315319364336238
+Running avgs for agent 1: q_loss: 6.0077362060546875, q_loss2: -6.007349967956543, p_loss: 1.7049082517623901, mean_rew: -0.31265343035751825, var_rew: 0.2123704023527742
+steps: 874975, episodes: 35000, mean episode reward: -8.653050253897709, agent episode reward: [-1.7444955022878221, -6.908554751609888], time: 57.551
+Running avgs for agent 0: q_loss: 3.3843061923980713, q_loss2: -3.381774663925171, p_loss: 0.4613434672355652, mean_rew: -0.08127228660332261, var_rew: 0.14527273842003288
+Running avgs for agent 1: q_loss: 6.145539283752441, q_loss2: -6.144392013549805, p_loss: 1.696661353111267, mean_rew: -0.31253035622779407, var_rew: 0.2108347616278038
+steps: 899975, episodes: 36000, mean episode reward: -8.397634230737786, agent episode reward: [-1.7960113179579302, -6.601622912779855], time: 57.426
+Running avgs for agent 0: q_loss: 3.4334330558776855, q_loss2: -3.4306247234344482, p_loss: 0.4449874758720398, mean_rew: -0.08018837692804713, var_rew: 0.14346240201259655
+Running avgs for agent 1: q_loss: 6.334720611572266, q_loss2: -6.334106922149658, p_loss: 1.6907541751861572, mean_rew: -0.3122144472261997, var_rew: 0.21082536779762323
+steps: 924975, episodes: 37000, mean episode reward: -8.645560175153962, agent episode reward: [-1.425278827166043, -7.220281347987918], time: 57.456
+Running avgs for agent 0: q_loss: 3.504537582397461, q_loss2: -3.5017549991607666, p_loss: 0.413394570350647, mean_rew: -0.07991242936689535, var_rew: 0.14241979947657263
+Running avgs for agent 1: q_loss: 6.470882892608643, q_loss2: -6.470420837402344, p_loss: 1.693021297454834, mean_rew: -0.31192128252143453, var_rew: 0.20946120402176477
+steps: 949975, episodes: 38000, mean episode reward: -8.471426335249642, agent episode reward: [-1.5855498478311745, -6.885876487418466], time: 57.381
+Running avgs for agent 0: q_loss: 3.574977159500122, q_loss2: -3.5686943531036377, p_loss: 0.3681231737136841, mean_rew: -0.07971590616945148, var_rew: 0.14107453274710957
+Running avgs for agent 1: q_loss: 6.528905391693115, q_loss2: -6.528622150421143, p_loss: 1.692004919052124, mean_rew: -0.3091074721788171, var_rew: 0.2063234029910642
+steps: 974975, episodes: 39000, mean episode reward: -8.59138703675247, agent episode reward: [-1.6958753026119657, -6.895511734140505], time: 57.402
+Running avgs for agent 0: q_loss: 3.7772185802459717, q_loss2: -3.7748658657073975, p_loss: 0.3489818871021271, mean_rew: -0.07764330240111506, var_rew: 0.14373874513816798
+Running avgs for agent 1: q_loss: 6.721982479095459, q_loss2: -6.7211151123046875, p_loss: 1.6927109956741333, mean_rew: -0.3083973175184843, var_rew: 0.20640652193132736
+steps: 999975, episodes: 40000, mean episode reward: -8.689055522101295, agent episode reward: [-1.6885130510471609, -7.000542471054135], time: 57.504
+Running avgs for agent 0: q_loss: 3.820772409439087, q_loss2: -3.8179256916046143, p_loss: 0.3338358700275421, mean_rew: -0.079287599842649, var_rew: 0.14195597925443718
+Running avgs for agent 1: q_loss: 6.912630558013916, q_loss2: -6.9122314453125, p_loss: 1.6836347579956055, mean_rew: -0.30882779909495434, var_rew: 0.20649228738005457
+steps: 1024975, episodes: 41000, mean episode reward: -8.500593478343859, agent episode reward: [-1.2422323062051015, -7.258361172138757], time: 57.286
+Running avgs for agent 0: q_loss: 3.7082700729370117, q_loss2: -3.7054941654205322, p_loss: 0.2936018407344818, mean_rew: -0.07862733365104066, var_rew: 0.13674418975061292
+Running avgs for agent 1: q_loss: 6.590508937835693, q_loss2: -6.58964729309082, p_loss: 1.6160298585891724, mean_rew: -0.2982197039334161, var_rew: 0.19526866907270826
+steps: 1049975, episodes: 42000, mean episode reward: -8.658600024882396, agent episode reward: [-1.0836126060744171, -7.57498741880798], time: 57.323
+Running avgs for agent 0: q_loss: 3.170748710632324, q_loss2: -3.168966293334961, p_loss: 0.19235120713710785, mean_rew: -0.07890948781253034, var_rew: 0.12230677500310509
+Running avgs for agent 1: q_loss: 5.477461814880371, q_loss2: -5.477179050445557, p_loss: 1.4780646562576294, mean_rew: -0.27686101053978357, var_rew: 0.1680183799241898
+steps: 1074975, episodes: 43000, mean episode reward: -9.04812802741238, agent episode reward: [-0.6025342984275992, -8.445593728984779], time: 58.35
+Running avgs for agent 0: q_loss: 3.1172597408294678, q_loss2: -3.115443468093872, p_loss: 0.07216403633356094, mean_rew: -0.07451689634514762, var_rew: 0.11946562245607752
+Running avgs for agent 1: q_loss: 5.510117053985596, q_loss2: -5.509886264801025, p_loss: 1.4634559154510498, mean_rew: -0.27586238730836804, var_rew: 0.16627925762132242
+steps: 1099975, episodes: 44000, mean episode reward: -9.04389406423107, agent episode reward: [-0.04468840429094787, -8.999205659940124], time: 57.466
+Running avgs for agent 0: q_loss: 3.1714017391204834, q_loss2: -3.169560194015503, p_loss: -0.07637933641672134, mean_rew: -0.07119887297194083, var_rew: 0.11909301635202718
+Running avgs for agent 1: q_loss: 5.652792930603027, q_loss2: -5.652446269989014, p_loss: 1.4714192152023315, mean_rew: -0.27984770578040163, var_rew: 0.1667607517206385
+steps: 1124975, episodes: 45000, mean episode reward: -9.477017259639148, agent episode reward: [-0.30187245799625095, -9.175144801642897], time: 58.24
+Running avgs for agent 0: q_loss: 3.2711353302001953, q_loss2: -3.2692973613739014, p_loss: -0.3081997036933899, mean_rew: -0.06793059850987719, var_rew: 0.11967575161189824
+Running avgs for agent 1: q_loss: 5.71977424621582, q_loss2: -5.7194085121154785, p_loss: 1.4565436840057373, mean_rew: -0.28184992893989685, var_rew: 0.16562864637833924
+steps: 1149975, episodes: 46000, mean episode reward: -8.87860105293987, agent episode reward: [-0.4120178835723798, -8.466583169367489], time: 57.339
+Running avgs for agent 0: q_loss: 3.292588472366333, q_loss2: -3.2905874252319336, p_loss: -0.5399336218833923, mean_rew: -0.06667758418879598, var_rew: 0.11848825776232152
+Running avgs for agent 1: q_loss: 5.854449272155762, q_loss2: -5.854075908660889, p_loss: 1.4637467861175537, mean_rew: -0.28409887974356907, var_rew: 0.16582533124852006
+steps: 1174975, episodes: 47000, mean episode reward: -9.26987795641482, agent episode reward: [-0.2998918852770218, -8.9699860711378], time: 57.383
+Running avgs for agent 0: q_loss: 3.3776543140411377, q_loss2: -3.3756139278411865, p_loss: -0.6819184422492981, mean_rew: -0.06336983811244684, var_rew: 0.11868983868351798
+Running avgs for agent 1: q_loss: 5.918344020843506, q_loss2: -5.91800594329834, p_loss: 1.4563887119293213, mean_rew: -0.28477573917645077, var_rew: 0.16458063823294872
+steps: 1199975, episodes: 48000, mean episode reward: -9.146757545716158, agent episode reward: [-0.6295369927222632, -8.517220552993894], time: 57.464
+Running avgs for agent 0: q_loss: 3.4824228286743164, q_loss2: -3.480398654937744, p_loss: -0.775719165802002, mean_rew: -0.06335036153528367, var_rew: 0.11926401981010915
+Running avgs for agent 1: q_loss: 6.002960681915283, q_loss2: -6.0025763511657715, p_loss: 1.4626004695892334, mean_rew: -0.2878755852249872, var_rew: 0.16372707336422693
+steps: 1224975, episodes: 49000, mean episode reward: -8.994405965448976, agent episode reward: [-1.1633867002373424, -7.831019265211634], time: 57.429
+Running avgs for agent 0: q_loss: 3.61824893951416, q_loss2: -3.6163430213928223, p_loss: -0.7853224277496338, mean_rew: -0.06173929195257449, var_rew: 0.12035635122756418
+Running avgs for agent 1: q_loss: 6.154669761657715, q_loss2: -6.1543354988098145, p_loss: 1.4929043054580688, mean_rew: -0.28932485354642995, var_rew: 0.16414331978555902
+steps: 1249975, episodes: 50000, mean episode reward: -8.894850176154955, agent episode reward: [-1.746431625126196, -7.148418551028757], time: 57.961
+Running avgs for agent 0: q_loss: 3.6602046489715576, q_loss2: -3.658423662185669, p_loss: -0.6909405589103699, mean_rew: -0.060610048276383166, var_rew: 0.11959264971862468
+Running avgs for agent 1: q_loss: 6.135051250457764, q_loss2: -6.13472843170166, p_loss: 1.481961727142334, mean_rew: -0.2871388150881322, var_rew: 0.16139249974031816
+steps: 1274975, episodes: 51000, mean episode reward: -8.948392586321315, agent episode reward: [-2.0830603141930633, -6.86533227212825], time: 57.887
+Running avgs for agent 0: q_loss: 3.8319101333618164, q_loss2: -3.830061674118042, p_loss: -0.5901007652282715, mean_rew: -0.06166632954491284, var_rew: 0.12122583956510323
+Running avgs for agent 1: q_loss: 6.395417213439941, q_loss2: -6.395096302032471, p_loss: 1.4574989080429077, mean_rew: -0.28939696703465795, var_rew: 0.16370662383416204
+steps: 1299975, episodes: 52000, mean episode reward: -8.93996454033382, agent episode reward: [-1.6760275586917956, -7.263936981642024], time: 57.414
+Running avgs for agent 0: q_loss: 3.870748519897461, q_loss2: -3.8688316345214844, p_loss: -0.539090633392334, mean_rew: -0.06151221403816012, var_rew: 0.12032891081429732
+Running avgs for agent 1: q_loss: 6.554818153381348, q_loss2: -6.554545879364014, p_loss: 1.4047025442123413, mean_rew: -0.2902024832013643, var_rew: 0.16412142840467545
+steps: 1324975, episodes: 53000, mean episode reward: -8.596172370654884, agent episode reward: [-0.810721119137065, -7.785451251517817], time: 63.974
+Running avgs for agent 0: q_loss: 3.9332833290100098, q_loss2: -3.931511878967285, p_loss: -0.5482860803604126, mean_rew: -0.061058110906184127, var_rew: 0.11994085430754933
+Running avgs for agent 1: q_loss: 6.62428617477417, q_loss2: -6.624000072479248, p_loss: 1.3683933019638062, mean_rew: -0.29073225761033517, var_rew: 0.16295246661726043
+steps: 1349975, episodes: 54000, mean episode reward: -8.609370812642098, agent episode reward: [-1.1389552284247375, -7.470415584217361], time: 61.466
+Running avgs for agent 0: q_loss: 4.057018280029297, q_loss2: -4.054989814758301, p_loss: -0.610687255859375, mean_rew: -0.05917042967226459, var_rew: 0.12060238911181856
+Running avgs for agent 1: q_loss: 6.738010883331299, q_loss2: -6.737763404846191, p_loss: 1.4215984344482422, mean_rew: -0.291933117803602, var_rew: 0.1625768210705196
+steps: 1374975, episodes: 55000, mean episode reward: -8.369746974113712, agent episode reward: [-1.1750669316555609, -7.194680042458151], time: 60.36
+Running avgs for agent 0: q_loss: 4.1008782386779785, q_loss2: -4.098973274230957, p_loss: -0.5653395056724548, mean_rew: -0.0588923122080168, var_rew: 0.11988490765339442
+Running avgs for agent 1: q_loss: 6.790760040283203, q_loss2: -6.790475368499756, p_loss: 1.4703514575958252, mean_rew: -0.2916659223270549, var_rew: 0.16121110969032793
+steps: 1399975, episodes: 56000, mean episode reward: -8.328626378148202, agent episode reward: [-1.058918714208891, -7.269707663939313], time: 59.715
+Running avgs for agent 0: q_loss: 4.170412063598633, q_loss2: -4.168524742126465, p_loss: -0.48830974102020264, mean_rew: -0.058713323481286495, var_rew: 0.11960970899204086
+Running avgs for agent 1: q_loss: 6.8719987869262695, q_loss2: -6.871692180633545, p_loss: 1.450360894203186, mean_rew: -0.29074324519259587, var_rew: 0.16033135088060305
+steps: 1424975, episodes: 57000, mean episode reward: -8.6918044482956, agent episode reward: [-1.6874836152643133, -7.004320833031286], time: 62.009
+Running avgs for agent 0: q_loss: 4.307709217071533, q_loss2: -4.305699348449707, p_loss: -0.45889851450920105, mean_rew: -0.05788810653953213, var_rew: 0.1204363528866401
+Running avgs for agent 1: q_loss: 7.0571513175964355, q_loss2: -7.0566792488098145, p_loss: 1.3971595764160156, mean_rew: -0.2917898609345029, var_rew: 0.16109761193887592
+steps: 1449975, episodes: 58000, mean episode reward: -8.85482105851858, agent episode reward: [-1.3369815564100784, -7.517839502108502], time: 63.817
+Running avgs for agent 0: q_loss: 4.312903881072998, q_loss2: -4.31077241897583, p_loss: -0.46135473251342773, mean_rew: -0.05676746774267647, var_rew: 0.11910217230883395
+Running avgs for agent 1: q_loss: 7.14716911315918, q_loss2: -7.146673679351807, p_loss: 1.2808403968811035, mean_rew: -0.2910375999213128, var_rew: 0.16035457214460633
+steps: 1474975, episodes: 59000, mean episode reward: -8.605782791873368, agent episode reward: [-0.6604502448599401, -7.945332547013428], time: 61.243
+Running avgs for agent 0: q_loss: 4.475675582885742, q_loss2: -4.4735283851623535, p_loss: -0.48612743616104126, mean_rew: -0.057780888915478876, var_rew: 0.12033699043221344
+Running avgs for agent 1: q_loss: 7.278059005737305, q_loss2: -7.277841091156006, p_loss: 1.182199239730835, mean_rew: -0.29167568183092146, var_rew: 0.16026676152494662
+steps: 1499975, episodes: 60000, mean episode reward: -8.616538537117012, agent episode reward: [0.36846064287016767, -8.984999179987183], time: 60.327
+Running avgs for agent 0: q_loss: 4.521117210388184, q_loss2: -4.51901912689209, p_loss: -0.5945960283279419, mean_rew: -0.05420398102690821, var_rew: 0.11969178727310123
+Running avgs for agent 1: q_loss: 7.461454391479492, q_loss2: -7.461141586303711, p_loss: 1.190800428390503, mean_rew: -0.294959487649577, var_rew: 0.1610065926328632
+Traceback (most recent call last):
+  File "train.py", line 230, in <module>
+    train(arglist)
+
