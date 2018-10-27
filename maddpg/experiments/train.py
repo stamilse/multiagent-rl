@@ -6,6 +6,8 @@ import pickle
 import sys
 import math
 sys.path.append('..')
+sys.path.append('../../multiagent-particle-envs')
+import multiagent
 import maddpg.common.tf_util as U
 from maddpg.trainer.maddpg import MADDPGAgentTrainer
 import tensorflow.contrib.layers as layers

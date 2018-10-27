@@ -13,8 +13,11 @@ import time
 import pickle
 import sys
 sys.path.append('..')
+sys.path.append('../../multiagent-particle-envs')
+import multiagent
 import maddpg.common.tf_util as U
 from maddpg.trainer.maddpg_vanila import MADDPGAgentTrainer
+from maddpg.trainer.maddpg_vanila_indep_learner import MADDPGAgentTrainerIndepLearner
 import tensorflow.contrib.layers as layers
 
 def parse_args():
@@ -26,6 +29,7 @@ def parse_args():
     parser.add_argument("--num-adversaries", type=int, default=0, help="number of adversaries")
     parser.add_argument("--good-policy", type=str, default="maddpg", help="policy for good agents")
     parser.add_argument("--adv-policy", type=str, default="maddpg", help="policy of adversaries")
+    parser.add_argument("--independent-learner", type=str, default="False", help="use independent learner or not")
     # Core training parameters
     parser.add_argument("--lr", type=float, default=1e-2, help="learning rate for Adam optimizer")
     parser.add_argument("--gamma", type=float, default=0.95, help="discount factor")
@@ -43,6 +47,7 @@ def parse_args():
     parser.add_argument("--benchmark-iters", type=int, default=100000, help="number of iterations run for benchmarking")
     parser.add_argument("--benchmark-dir", type=str, default="./benchmark_files/", help="directory where benchmark data is saved")
     parser.add_argument("--plots-dir", type=str, default="./learning_curves/", help="directory where plot data is saved")
+
     return parser.parse_args()
 
 def mlp_model(input, num_outputs, scope, reuse=False, num_units=64, rnn_cell=None):
@@ -72,7 +77,10 @@ def make_env(scenario_name, arglist, benchmark=False):
 def get_trainers(env, num_adversaries, obs_shape_n, arglist):
     trainers = []
     model = mlp_model
-    trainer = MADDPGAgentTrainer
+    if arglist.independent_learner:
+        trainer = MADDPGAgentTrainerIndepLearner
+    else:    
+        trainer = MADDPGAgentTrainer
     for i in range(num_adversaries):
         trainers.append(trainer(
             "agent_%d" % i, model, obs_shape_n, env.action_space, i, arglist,
@@ -227,4 +235,8 @@ def train(arglist):
 
 if __name__ == '__main__':
     arglist = parse_args()
+    if arglist.independent_learner=="True":
+        arglist.independent_learner = True
+    else:
+        arglist.independent_learner = False
     train(arglist)
