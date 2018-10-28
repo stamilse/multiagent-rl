@@ -9,7 +9,7 @@ sys.path.append('..')
 sys.path.append('../../multiagent-particle-envs')
 import multiagent
 import maddpg.common.tf_util as U
-from maddpg.trainer.maddpg_ufunc import MADDPGAgentTrainer
+from maddpg.trainer.maddpg import MADDPGAgentTrainer
 from maddpg.trainer.maddpg_indep_learner import MADDPGAgentTrainerIndepLearner
 import tensorflow.contrib.layers as layers
 
