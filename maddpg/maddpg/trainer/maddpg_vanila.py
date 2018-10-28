@@ -15,6 +15,7 @@ Created on Mon Oct 22 17:14:43 2018
 
 import numpy as np
 import random
+import math
 import tensorflow as tf
 import maddpg.common.tf_util as U
 
@@ -87,7 +88,7 @@ def p_train(make_obs_ph_n, act_space_n, p_index, p_func, q_func, optimizer, grad
 
         return act, train, update_target_p, {'p_values': p_values, 'target_act': target_act}
 
-def q_train(make_obs_ph_n, act_space_n, q_index, q_func, optimizer, grad_norm_clipping=None, local_q_func=False, scope="trainer", reuse=None, num_units=64):
+def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, grad_norm_clipping=None, local_q_func=False, scope="trainer", reuse=None, num_units=64, u_estimation=False):
     with tf.variable_scope(scope, reuse=reuse):
         # create distribtuions
         act_pdtype_n = [make_pdtype(act_space) for act_space in act_space_n]
@@ -96,56 +97,87 @@ def q_train(make_obs_ph_n, act_space_n, q_index, q_func, optimizer, grad_norm_cl
         obs_ph_n = make_obs_ph_n
         act_ph_n = [act_pdtype_n[i].sample_placeholder([None], name="action"+str(i)) for i in range(len(act_space_n))]
         target_ph = tf.placeholder(tf.float32, [None], name="target")
-
+        rew = tf.placeholder(tf.float32, [None], name="reward")
+        if u_estimation:
+            target_ph_u = tf.placeholder(tf.float32, [None], name="target_u")
         q_input = tf.concat(obs_ph_n + act_ph_n, 1)
         if local_q_func:
             q_input = tf.concat([obs_ph_n[q_index], act_ph_n[q_index]], 1)
         q = q_func(q_input, 1, scope="q_func", num_units=num_units)[:,0]
         q_func_vars = U.scope_vars(U.absolute_scope_name("q_func"))
-
-        q_loss = tf.reduce_mean(tf.square(q - target_ph))
+        if u_estimation: 
+            u_input = tf.concat(obs_ph_n + act_ph_n, 1)
+            u = u_func(u_input, 1, scope="u_func", num_units=num_units)[:,0]
+            u_loss = tf.reduce_mean(tf.square(tf.square(rew) + 2*tf.multiply(rew, target_ph) + target_ph_u - u))
+            var = u - tf.square(q)
+        else:
+            var = tf.square(rew + target_ph) - tf.square(q)
+        if u_estimation:
+            u_func_vars = U.scope_vars(U.absolute_scope_name("u_func"))      
+        q_loss = tf.reduce_mean(tf.square(q - (rew + target_ph)))
 
         # viscosity solution to Bellman differential equation in place of an initial condition
         q_reg = tf.reduce_mean(tf.square(q))
-        loss = q_loss #+ 1e-3 * q_reg
-
-        optimize_expr = U.minimize_and_clip(optimizer, loss, q_func_vars, grad_norm_clipping)
-
-        # Create callable functions
-        train = U.function(inputs=obs_ph_n + act_ph_n + [target_ph], outputs=loss, updates=[optimize_expr])
+        if u_estimation:
+            loss = q_loss + u_loss #+ 1e-3 * q_reg
+            optimize_expr = U.minimize_and_clip(optimizer, loss, q_func_vars+u_func_vars, grad_norm_clipping)
+            train = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [target_ph_u] + [rew], outputs=[q_loss, u_loss], updates=[optimize_expr])
+            var_fn = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [target_ph_u] + [rew], outputs=var)
+        else:
+            loss = q_loss #+ 1e-3 * q_reg
+            optimize_expr = U.minimize_and_clip(optimizer, loss, q_func_vars, grad_norm_clipping)
+            train = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [rew], outputs=loss, updates=[optimize_expr])
         q_values = U.function(obs_ph_n + act_ph_n, q)
 
+        var_fn = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [rew], outputs=var)
         # target network
         target_q = q_func(q_input, 1, scope="target_q_func", num_units=num_units)[:,0]
         target_q_func_vars = U.scope_vars(U.absolute_scope_name("target_q_func"))
         update_target_q = make_update_exp(q_func_vars, target_q_func_vars)
 
         target_q_values = U.function(obs_ph_n + act_ph_n, target_q)
+        
+        if u_estimation:
+            u_values = U.function(obs_ph_n + act_ph_n, u)
+            target_u = u_func(u_input, 1, scope="target_u_func", num_units=num_units)[:,0]
+            target_u_func_vars = U.scope_vars(U.absolute_scope_name("target_u_func"))
+            update_target_u = make_update_exp(u_func_vars, target_u_func_vars)
+            target_u_values = U.function(obs_ph_n + act_ph_n, target_u)
 
-        return train, update_target_q, {'q_values': q_values, 'target_q_values': target_q_values}
+        if u_estimation:
+            return train, update_target_q, update_target_u, {'q_values': q_values, 'u_values':u_values, 'var':var_fn, 'target_q_values': target_q_values, 'target_u_values': target_u_values}
+        else:
+            return train, update_target_q, {'q_values': q_values, 'var':var_fn, 'target_q_values': target_q_values}
 
 class MADDPGAgentTrainer(AgentTrainer):
-    def __init__(self, name, model, obs_shape_n, act_space_n, agent_index, args, local_q_func=False):
+    def __init__(self, name, model, obs_shape_n, act_space_n, agent_index, args, local_q_func=False, u_estimation=False):
         self.name = name
         self.n = len(obs_shape_n)
         self.agent_index = agent_index
         self.args = args
+        self.u_estimation = u_estimation
+        print ('u estimation', u_estimation)
         obs_ph_n = []
         for i in range(self.n):
             obs_ph_n.append(U.BatchInput(obs_shape_n[i], name="observation"+str(i)).get())
 
         # Create all the functions necessary to train the model
-        self.q_train, self.q_update, self.q_debug = q_train(
+        l = q_train(
             scope=self.name,
             make_obs_ph_n=obs_ph_n,
             act_space_n=act_space_n,
             q_index=agent_index,
             q_func=model,
+            u_func=model,
             optimizer=tf.train.AdamOptimizer(learning_rate=args.lr),
             grad_norm_clipping=0.5,
             local_q_func=local_q_func,
             num_units=args.num_units
         )
+        if self.u_estimation:
+            self.q_train, self.q_update, self.u_update, self.q_debug = l
+        else:
+            self.q_train, self.q_update, self.q_debug = l
         self.act, self.p_train, self.p_update, self.p_debug = p_train(
             scope=self.name,
             make_obs_ph_n=obs_ph_n,
@@ -195,17 +227,30 @@ class MADDPGAgentTrainer(AgentTrainer):
         # train q network
         num_sample = 1
         target_q = 0.0
+        target_u = 0.0
         for i in range(num_sample):
             target_act_next_n = [agents[i].p_debug['target_act'](obs_next_n[i]) for i in range(self.n)]
             target_q_next = self.q_debug['target_q_values'](*(obs_next_n + target_act_next_n))
-            target_q += rew + self.args.gamma * (1.0 - done) * target_q_next
+            target_q += self.args.gamma * (1.0 - done) * target_q_next
+            if self.u_estimation:
+                target_u_next = self.q_debug['target_u_values'](*(obs_next_n + target_act_next_n))
+                target_u += math.pow(self.args.gamma, 2.0) * (1.0 - done) * target_u_next
         target_q /= num_sample
-        q_loss = self.q_train(*(obs_n + act_n + [target_q]))
-
+        target_u /= num_sample
+        if self.u_estimation:
+            q_loss, u_loss = self.q_train(*(obs_n + act_n + [target_q] + [target_u] + [rew]))
+        else:
+            q_loss = self.q_train(*(obs_n + act_n + [target_q] + [rew]))
+        if self.u_estimation:    
+            var_rew = np.array(self.q_debug['var'](*(obs_n + act_n + [target_q] + [target_u] + [rew]))).mean()
+        else:
+            var_rew = np.array(self.q_debug['var'](*(obs_n + act_n + [target_q] + [rew]))).mean()
         # train p network
         p_loss = self.p_train(*(obs_n + act_n))
 
         self.p_update()
         self.q_update()
-
-        return [np.asarray(q_loss).mean(), np.asarray(p_loss).mean(), np.mean(target_q), np.mean(rew), np.var(rew), np.mean(target_q_next), np.std(target_q)]
+        if self.u_estimation:
+            self.u_update()
+            
+        return [np.asarray(q_loss).mean(), np.asarray(p_loss).mean(), np.mean(target_q), np.mean(rew), var_rew, np.mean(target_q_next), np.std(target_q)]

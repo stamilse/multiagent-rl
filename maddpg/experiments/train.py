@@ -9,7 +9,8 @@ sys.path.append('..')
 sys.path.append('../../multiagent-particle-envs')
 import multiagent
 import maddpg.common.tf_util as U
-from maddpg.trainer.maddpg import MADDPGAgentTrainer
+from maddpg.trainer.maddpg_ufunc import MADDPGAgentTrainer
+from maddpg.trainer.maddpg_indep_learner import MADDPGAgentTrainerIndepLearner
 import tensorflow.contrib.layers as layers
 
 def parse_args():
@@ -21,11 +22,13 @@ def parse_args():
     parser.add_argument("--num-adversaries", type=int, default=0, help="number of adversaries")
     parser.add_argument("--good-policy", type=str, default="maddpg", help="policy for good agents")
     parser.add_argument("--adv-policy", type=str, default="maddpg", help="policy of adversaries")
+    parser.add_argument("--independent-learner", type=str, default="False", help="use independent learner or not")
     # Core training parameters
     parser.add_argument("--lr_actor", type=float, default=0.5*1e-2, help="learning rate for the actor for Adam optimizer")
     parser.add_argument("--lr_critic", type=float, default=1e-2, help="learning rate for the critic for Adam optimizer")
     parser.add_argument("--lr_lamda", type=float, default=1e-4, help="learning rate for the lamda update using Adam optimizer")
-    
+    parser.add_argument("--u_estimation", type=str, default="False", help="explicitly learn u-values for better estimation of variance")
+    parser.add_argument("--constrained", type=str, default="True", help="objective is a constrained minimization or not")
     parser.add_argument("--gamma", type=float, default=0.95, help="discount factor")
     parser.add_argument("--batch-size", type=int, default=1024, help="number of episodes to optimize at the same time")
     parser.add_argument("--num-units", type=int, default=64, help="number of units in the mlp")
@@ -71,15 +74,18 @@ def make_env(scenario_name, arglist, benchmark=False):
 def get_trainers(env, num_adversaries, obs_shape_n, arglist):
     trainers = []
     model = mlp_model
-    trainer = MADDPGAgentTrainer
+    if arglist.independent_learner:
+        trainer = MADDPGAgentTrainerIndepLearner
+    else:    
+        trainer = MADDPGAgentTrainer
     for i in range(num_adversaries):
         trainers.append(trainer(
             "agent_%d" % i, model, obs_shape_n, env.action_space, i, arglist,
-            local_q_func=(arglist.adv_policy=='ddpg')))
+            local_q_func=(arglist.adv_policy=='ddpg'), u_estimation=arglist.u_estimation, constrained=arglist.constrained))
     for i in range(num_adversaries, env.n):
         trainers.append(trainer(
             "agent_%d" % i, model, obs_shape_n, env.action_space, i, arglist,
-            local_q_func=(arglist.good_policy=='ddpg')))
+            local_q_func=(arglist.good_policy=='ddpg'), u_estimation=arglist.u_estimation, constrained=arglist.constrained))
     return trainers
 
 
@@ -114,7 +120,8 @@ def train(arglist):
         train_step = 0
         t_start = time.time()
         avg_q_loss = [[] for i in range(env.n)]
-        avg_q_loss2 = [[] for i in range(env.n)]
+        if arglist.u_estimation:
+            avg_u_loss = [[] for i in range(env.n)]
         avg_p_loss = [[] for i in range(env.n)]
         avg_mean_rew = [[] for i in range(env.n)]
         avg_var_rew = [[] for i in range(env.n)]
@@ -174,20 +181,18 @@ def train(arglist):
                 returned = agent.update(trainers, train_step)
                 if returned is None:
                     continue
-                q_loss, q_loss2, p_loss, _, mean_rew, var_rew, _, _, lamda = returned
+                if arglist.u_estimation:
+                    q_loss, u_loss, p_loss, mean_rew, var_rew, lamda = returned
+                else:
+                    q_loss, p_loss, mean_rew, var_rew, lamda = returned
                 #print ('qloss value::::::::::::',q_loss)
-                if not np.isnan(q_loss):
-                    avg_q_loss[index].append(q_loss)
-                if not np.isnan(q_loss2):
-                    avg_q_loss2[index].append(q_loss2)
-                if not np.isnan(p_loss):
-                    avg_p_loss[index].append(p_loss)
-                if not np.isnan(mean_rew):
-                    avg_mean_rew[index].append(mean_rew)
-                if not np.isnan(var_rew):
-                    avg_var_rew[index].append(var_rew)
-                if not np.isnan(lamda):
-                    avg_lamda[index].append(lamda)
+                avg_q_loss[index].append(q_loss)
+                if arglist.u_estimation:
+                    avg_u_loss[index].append(u_loss)
+                avg_p_loss[index].append(p_loss)
+                avg_mean_rew[index].append(mean_rew)
+                avg_var_rew[index].append(var_rew)
+                avg_lamda[index].append(lamda)
             # save model, display training output
             if terminal and len(episode_rewards)>0 and (len(episode_rewards) % arglist.save_rate == 0):
                 U.save_state(arglist.save_dir, saver=saver)
@@ -201,16 +206,23 @@ def train(arglist):
                         [np.mean(rew[-arglist.save_rate:]) for rew in agent_rewards], round(time.time()-t_start, 3)))
                 for agent_index in range(env.n):
                     avg_q_loss[agent_index] = np.asarray(avg_q_loss[agent_index])
-                    avg_q_loss2[agent_index] = np.asarray(avg_q_loss2[agent_index])
+                    if arglist.u_estimation:
+                        avg_u_loss[agent_index] = np.asarray(avg_u_loss[agent_index])
                     avg_p_loss[agent_index] = np.asarray(avg_p_loss[agent_index])
                     avg_mean_rew[agent_index] = np.asarray(avg_mean_rew[agent_index])
                     avg_var_rew[agent_index] = np.asarray(avg_var_rew[agent_index])
                     avg_lamda[agent_index] = np.asarray(avg_lamda[agent_index])
-                    print('Running avgs for agent {}: q_loss: {}, q_loss2: {}, p_loss: {}, mean_rew: {}, var_rew: {}, lamda: {}'.format(
-                        agent_index, np.mean(avg_q_loss[agent_index]), np.mean(avg_q_loss2[agent_index]), 
-                        np.mean(avg_p_loss[agent_index]), np.mean(avg_mean_rew[agent_index]), np.mean(avg_var_rew[agent_index]), np.mean(avg_lamda[agent_index])))
+                    if arglist.u_estimation:
+                        print('Running avgs for agent {}: q_loss: {}, u_loss: {}, p_loss: {}, mean_rew: {}, variance: {}, lamda: {}'.format(
+                            agent_index, np.mean(avg_q_loss[agent_index]), np.mean(avg_u_loss[agent_index]), 
+                            np.mean(avg_p_loss[agent_index]), np.mean(avg_mean_rew[agent_index]), np.mean(avg_var_rew[agent_index]), np.mean(avg_lamda[agent_index])))
+                    else:
+                        print('Running avgs for agent {}: q_loss: {}, p_loss: {}, mean_rew: {}, var_rew: {}, lamda: {}'.format(
+                            agent_index, np.mean(avg_q_loss[agent_index]), np.mean(avg_p_loss[agent_index]), 
+                            np.mean(avg_mean_rew[agent_index]), np.mean(avg_var_rew[agent_index]), np.mean(avg_lamda[agent_index])))
                     avg_q_loss[agent_index] = []
-                    avg_q_loss2[agent_index] = []
+                    if arglist.u_estimation:
+                        avg_u_loss[agent_index] = []
                     avg_p_loss[agent_index] = []
                     avg_mean_rew[agent_index] = []
                     avg_var_rew[agent_index] = []
@@ -234,4 +246,17 @@ def train(arglist):
 
 if __name__ == '__main__':
     arglist = parse_args()
+    if arglist.independent_learner=="True":
+        arglist.independent_learner = True
+    else:
+        arglist.independent_learner = False
+    if arglist.u_estimation=="True":
+        arglist.u_estimation = True
+    else:
+        arglist.u_estimation = False
+    if arglist.constrained =="True":
+        arglist.constrained = True
+    else:
+        arglist.constrained = False
+    print ('arglist.u_estimation',arglist.u_estimation)
     train(arglist)

@@ -312,10 +312,12 @@ class _Function(object):
         feed_dict = {}
         # Update the args
         for inpt, value in zip(self.inputs, args):
+            #print('inpt', inpt)
             self._feed_input(feed_dict, inpt, value)
         # Update the kwargs
         kwargs_passed_inpt_names = set()
         for inpt in self.inputs[len(args):]:
+            print('inpt name ', inpt.name)
             inpt_name = inpt.name.split(':')[0]
             inpt_name = inpt_name.split('/')[-1]
             assert inpt_name not in kwargs_passed_inpt_names, \
@@ -323,13 +325,21 @@ class _Function(object):
             if inpt_name in kwargs:
                 kwargs_passed_inpt_names.add(inpt_name)
                 self._feed_input(feed_dict, inpt, kwargs.pop(inpt_name))
+                print ('inpt', inpt)
+                print ('kwargs.pop(inpt_name)' ,kwargs.pop(inpt_name))
             else:
                 assert inpt in self.givens, "Missing argument " + inpt_name
         assert len(kwargs) == 0, "Function got extra arguments " + str(list(kwargs.keys()))
         # Update feed dict with givens.
+        #print ('self.givens', self.givens)
         for inpt in self.givens:
             feed_dict[inpt] = feed_dict.get(inpt, self.givens[inpt])
-        results = get_session().run(self.outputs_update, feed_dict=feed_dict)[:-1]
+        try:    
+            results = get_session().run(self.outputs_update, feed_dict=feed_dict)[:-1]
+        except:    
+            print('some error in feed_dict')    
+            for k,v in feed_dict.items():
+                print (k,'::',v)
         if self.check_nan:
             if any(np.isnan(r).any() for r in results):
                 raise RuntimeError("Nan detected")
