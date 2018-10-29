@@ -113,6 +113,10 @@ def train(arglist):
         agent_rewards = [[0.0] for _ in range(env.n)]  # individual agent reward
         final_ep_rewards = []  # sum of rewards for training curve
         final_ep_ag_rewards = []  # agent rewards for training curve
+        episode_variance = [0.0]
+        agent_variance = [[0.0] for _ in range(env.n)] 
+        final_ep_variance = []
+        final_ep_ag_variance = []
         agent_info = [[[]]]  # placeholder for benchmarking info
         saver = tf.train.Saver()
         obs_n = env.reset()
@@ -148,7 +152,10 @@ def train(arglist):
                 obs_n = env.reset()
                 episode_step = 0
                 episode_rewards.append(0)
+                episode_variance.append(0)
                 for a in agent_rewards:
+                    a.append(0)
+                for a in agent_variance:
                     a.append(0)
                 agent_info.append([[]])
 
@@ -185,13 +192,15 @@ def train(arglist):
                     q_loss, u_loss, p_loss, mean_rew, var_rew, lamda = returned
                 else:
                     q_loss, p_loss, mean_rew, var_rew, lamda = returned
+                episode_variance[-1] += max(0,var_rew)
+                agent_variance[index][-1] += max(0,var_rew) 
                 #print ('qloss value::::::::::::',q_loss)
                 avg_q_loss[index].append(q_loss)
                 if arglist.u_estimation:
                     avg_u_loss[index].append(u_loss)
                 avg_p_loss[index].append(p_loss)
                 avg_mean_rew[index].append(mean_rew)
-                avg_var_rew[index].append(var_rew)
+                avg_var_rew[index].append(max(0,var_rew))
                 avg_lamda[index].append(lamda)
             # save model, display training output
             if terminal and len(episode_rewards)>0 and (len(episode_rewards) % arglist.save_rate == 0):
@@ -200,10 +209,15 @@ def train(arglist):
                 if num_adversaries == 0:
                     print("steps: {}, episodes: {}, mean episode reward: {}, time: {}".format(
                         train_step, len(episode_rewards), np.mean(episode_rewards[-arglist.save_rate:]), round(time.time()-t_start, 3)))
+                    print("steps: {}, episodes: {}, mean episode variance: {}, time: {}".format(
+                        train_step, len(episode_variance), np.mean(episode_variance[-arglist.save_rate:]), round(time.time()-t_start, 3)))
                 else:
                     print("steps: {}, episodes: {}, mean episode reward: {}, agent episode reward: {}, time: {}".format(
                         train_step, len(episode_rewards), np.mean(episode_rewards[-arglist.save_rate:]),
                         [np.mean(rew[-arglist.save_rate:]) for rew in agent_rewards], round(time.time()-t_start, 3)))
+                    print("steps: {}, episodes: {}, mean episode variance: {}, agent episode variance: {}, time: {}".format(
+                        train_step, len(episode_rewards), np.mean(episode_variance[-arglist.save_rate:]),
+                        [np.mean(var[-arglist.save_rate:]) for var in agent_variance], round(time.time()-t_start, 3)))
                 for agent_index in range(env.n):
                     avg_q_loss[agent_index] = np.asarray(avg_q_loss[agent_index])
                     if arglist.u_estimation:
@@ -227,11 +241,15 @@ def train(arglist):
                     avg_mean_rew[agent_index] = []
                     avg_var_rew[agent_index] = []
                     avg_lamda[agent_index] = []
+                    print ('')
                 t_start = time.time()
                 # Keep track of final episode reward
                 final_ep_rewards.append(np.mean(episode_rewards[-arglist.save_rate:]))
+                final_ep_variance.append(np.mean(episode_variance[-arglist.save_rate:]))
                 for rew in agent_rewards:
                     final_ep_ag_rewards.append(np.mean(rew[-arglist.save_rate:]))
+                for var in agent_variance:    
+                    final_ep_ag_variance.append(np.mean(var[-arglist.save_rate:]))
 
             # saves final episode reward for plotting training curve later
             if len(episode_rewards) > arglist.num_episodes:

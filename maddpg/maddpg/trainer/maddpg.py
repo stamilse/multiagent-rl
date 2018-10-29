@@ -115,7 +115,7 @@ def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, opti
         q_func_vars = U.scope_vars(U.absolute_scope_name("q_func"))
         if u_estimation:
             u_func_vars = U.scope_vars(U.absolute_scope_name("u_func"))
-        q_loss = tf.reduce_mean(tf.square(q - target)) #+ lamda_constraint*(var_rew - alpha)
+        q_loss = tf.reduce_mean(tf.square(q - target)) 
         
         # viscosity solution to Bellman differential equation in place of an initial condition
         q_reg = tf.reduce_mean(tf.square(q))
