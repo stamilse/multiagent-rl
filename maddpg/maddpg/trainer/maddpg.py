@@ -81,7 +81,7 @@ def p_train(make_obs_ph_n, act_space_n, p_index, p_func, q_func, optimizer, grad
 
         return act, train, update_target_p, {'p_values': p_values, 'target_act': target_act}
 
-def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, optimizer_lamda, exp_var_alpha=None, cvar_alpha=None, cvar_beta=None, grad_norm_clipping=None, local_q_func=False, scope="trainer", reuse=None, num_units=64, u_estimation=False, constrained=True, constraint_type=None):
+def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, optimizer_lamda, exp_var_alpha=None, cvar_alpha=None, cvar_beta=None, grad_norm_clipping=None, local_q_func=False, scope="trainer", reuse=None, num_units=64, u_estimation=False, constrained=True, constraint_type=None, agent_type=None):
     with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
         if constrained:
             lamda_constraint = tf.get_variable('lamda_constraint'+str(q_index), [1], initializer = tf.constant_initializer(1.0), dtype = tf.float32)
@@ -115,8 +115,11 @@ def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, opti
                 q_loss = tf.reduce_mean(tf.square(q - (target_ph + rew - constraint)))
             elif constraint_type=="CVAR":
                 cvar = v_constraint + (1.0/(1.0+cvar_alpha))*tf.reduce_mean(tf.nn.relu(q - v_constraint))
-                constraint = lamda_constraint*(cvar - cvar_beta)
-                q_loss = tf.reduce_mean(tf.square(q - (target_ph + rew)) + constraint)                      
+                if agent_type=="adversary":
+                    constraint = lamda_constraint*(cvar - cvar_beta)
+                elif agent_type=="good":
+                    constraint = lamda_constraint*(cvar_beta - cvar)
+                q_loss = tf.reduce_mean(tf.square(q - (target_ph + rew - constraint)))                      
         else:
             q_loss = tf.reduce_mean(tf.square(q - (target_ph + rew))) 
             
@@ -185,7 +188,7 @@ def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, opti
         return train, train2, update_target_q, update_target_u, {'q_values': q_values, 'u_values': u_values, 'target_q_values': target_q_values, 'target_u_values': target_u_values, 'var':var_fn, 'cvar':cvar_fn, 'lamda_constraint':lamda_constraint, 'v_constraint':v_constraint, 'optimize_expr':optimize_expr}
            
 class MADDPGAgentTrainer(AgentTrainer):
-    def __init__(self, name, model, obs_shape_n, act_space_n, agent_index, args, local_q_func=False):
+    def __init__(self, name, model, obs_shape_n, act_space_n, agent_index, args, agent_type, local_q_func=False):
         self.name = name
         self.n = len(obs_shape_n)
         self.agent_index = agent_index
@@ -193,6 +196,11 @@ class MADDPGAgentTrainer(AgentTrainer):
         self.u_estimation = args.u_estimation
         self.constrained = args.constrained
         self.constraint_type = args.constraint_type
+        self.agent_type = agent_type
+        if self.agent_type=="good":
+            cvar_alpha = args.cvar_alpha_good_agent
+        elif self.agent_type=="adversary":
+            cvar_alpha = args.cvar_alpha_adv_agent
         obs_ph_n = []
         for i in range(self.n):
             obs_ph_n.append(U.BatchInput(obs_shape_n[i], name="observation"+str(i)).get())
@@ -207,14 +215,15 @@ class MADDPGAgentTrainer(AgentTrainer):
                 optimizer=tf.train.AdamOptimizer(learning_rate=args.lr_critic),
                 optimizer_lamda=tf.train.AdamOptimizer(learning_rate=args.lr_lamda),
                 exp_var_alpha=args.exp_var_alpha,
-                cvar_alpha=args.cvar_alpha,
+                cvar_alpha=cvar_alpha,
                 cvar_beta=args.cvar_beta,
                 grad_norm_clipping=0.5,
                 local_q_func=local_q_func,
                 num_units=args.num_units,
                 u_estimation=self.u_estimation,
                 constrained=self.constrained,
-                constraint_type=self.constraint_type
+                constraint_type=self.constraint_type,
+                agent_type=self.agent_type
             )
         
         self.act, self.p_train, self.p_update, self.p_debug = p_train(
