@@ -220,7 +220,7 @@ def train(arglist):
             for agent in trainers:
                 agent.preupdate()
             for index,agent in enumerate(trainers):
-                returned = agent.update(trainers, train_step)
+                returned = agent.update(trainers, train_step, freeze_policy)
                 if returned is None:    
                     #print ( 'returned None')
                     continue
