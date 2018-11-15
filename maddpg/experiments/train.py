@@ -47,6 +47,7 @@ def parse_args():
     # Evaluation
     parser.add_argument("--restore", action="store_true", default=False)
     parser.add_argument("--display", action="store_true", default=False)
+    parser.add_argument("--render-rate", type=int, default=1000000, help="render episode once every time this many episodes are completed")
     parser.add_argument("--benchmark", action="store_true", default=False)
     parser.add_argument("--benchmark-iters", type=int, default=100000, help="number of iterations run for benchmarking")
     parser.add_argument("--benchmark-dir", type=str, default="./benchmark_files/", help="directory where benchmark data is saved")
@@ -108,6 +109,13 @@ def get_trainers(env, num_adversaries, obs_shape_n, arglist):
             "agent_%d" % i, model, obs_shape_n, env.action_space, i, arglist,
             "good", local_q_func=(arglist.good_policy=='ddpg')))
     return trainers
+
+def render(env, filepath, episode_step, stitch=False):
+    frame = env.render(mode="rgb_array")[0]
+    Image.fromarray(frame).save(filepath + "." + ("%02d" % episode_step) + ".bmp")
+    if stitch:
+        subprocess.run(["ffmpeg", "-v", "warning", "-r", "10", "-i", filepath + ".%02d.bmp", "-vcodec", "mpeg4", "-y", filepath + ".mp4"], shell=False, check=True)
+        subprocess.run(["rm -f " + filepath + ".*.bmp"], shell=True, check=True)
 
 
 def train(arglist):
@@ -179,7 +187,13 @@ def train(arglist):
             for i, rew in enumerate(rew_n):
                 episode_rewards[-1] += rew
                 agent_rewards[i][-1] += rew
-
+                
+            if not arglist.benchmark and len(episode_rewards) % arglist.render_rate == 0:
+                render(env,
+                       arglist.save_dir + ("episode_%08d" % len(episode_rewards)),
+                       episode_step,
+                       terminal)
+                
             if done or terminal:
                 obs_n = env.reset()
                 episode_step = 0
@@ -193,7 +207,8 @@ def train(arglist):
                 for a in agent_cvar:
                     a.append(0)
                 agent_info.append([[]])
-
+                if len(episode_rewards) % arglist.render_rate == 0:
+                    render(env, arglist.save_dir + ("episode_%08d" % len(episode_rewards)), 0)
             # increment global step counter
             train_step += 1
 

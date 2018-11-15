@@ -3,10 +3,10 @@ from multiagent.core import World, Agent, Landmark
 from multiagent.scenario import BaseScenario
 
 class Scenario(BaseScenario):
-    def make_world(self):
+    def make_world(self, num_agents_inpt=1):
         world = World()
         # add agents
-        world.agents = [Agent() for i in range(1)]
+        world.agents = [Agent() for i in range(num_agents_inpt)]
         for i, agent in enumerate(world.agents):
             agent.name = 'agent %d' % i
             agent.collide = False
