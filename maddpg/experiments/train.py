@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument("--scenario", type=str, default="simple", help="name of the scenario script")
     parser.add_argument("--max-episode-len", type=int, default=25, help="maximum episode length")
     parser.add_argument("--num-episodes", type=int, default=60000, help="number of episodes")
+    parser.add_argument("--num-episodes-freeze_policy", type=int, default=70000, help="number of episodes for which policy should be frozen")
     parser.add_argument("--num-agents", type=int, default=1, help="number of agents")
     parser.add_argument("--num-adversaries", type=int, default=0, help="number of adversaries")
     parser.add_argument("--good-policy", type=str, default="maddpg", help="policy for good agents")
@@ -29,6 +30,7 @@ def parse_args():
     parser.add_argument("--lr_actor", type=float, default=0.5*1e-2, help="learning rate for the actor for Adam optimizer")
     parser.add_argument("--lr_critic", type=float, default=1e-2, help="learning rate for the critic for Adam optimizer")
     parser.add_argument("--lr_lamda", type=float, default=1e-4, help="learning rate for the lamda update using Adam optimizer in the expected variance constraint")
+    parser.add_argument("--lr_v", type=float, default=1e-2, help="learning rate for the v update for the CVAR")
     parser.add_argument("--u_estimation", type=str, default="False", help="explicitly learn u-values for better estimation of variance")
     parser.add_argument("--constrained", type=str, default="True", help="objective is a constrained minimization or not")
     parser.add_argument("--constraint_type", type=str, default="None", help="can be either of the following: Exp_Var or CVAR")
@@ -36,8 +38,8 @@ def parse_args():
     parser.add_argument("--batch-size", type=int, default=1024, help="number of episodes to optimize at the same time")
     parser.add_argument("--num-units", type=int, default=64, help="number of units in the mlp")
     parser.add_argument("--exp_var_alpha", type=float, default=0.02, help="alpha for controlling the variance constraint for the expected variance: Expected(variance) < alpha; Tune this by looking at the variance in the unconstrained case")
-    parser.add_argument("--cvar_alpha_adv_agent", type=float, default=1.2, help="alpha for controlling the expected cvar value: CVAR < alpha; Tune this by looking at the standard deviation of q-values in the unconstrained case for the adversary")
-    parser.add_argument("--cvar_alpha_good_agent", type=float, default=-2.8, help="alpha for controlling the expected cvar value: CVAR < alpha; Tune this by looking at the standard deviation of q-values in the unconstrained case for the good agent")
+    parser.add_argument("--cvar_alpha_adv_agent", type=float, default=3.2, help="alpha for controlling the expected cvar value: CVAR < alpha; Tune this by looking at the standard deviation of q-values in the unconstrained case for the adversary")
+    parser.add_argument("--cvar_alpha_good_agent", type=float, default=-0.15, help="alpha for controlling the expected cvar value: CVAR < alpha; Tune this by looking at the standard deviation of q-values in the unconstrained case for the good agent")
     parser.add_argument("--cvar_beta", type=float, default=0.9, help="beta which is the confidence level of the cvar")
     # Checkpointing
     parser.add_argument("--exp-name", type=str, default=None, help="name of the experiment")
@@ -66,7 +68,9 @@ def parse_args():
     else:
         arglist.constrained = False
     if arglist.constrained and arglist.constraint_type!="Exp_Var" and arglist.constraint_type!="CVAR":
-        raise Exception("constraint_tyep can be either of the following: Exp_Var or CVAR")    
+        raise Exception("constraint_type can be either of the following: Exp_Var or CVAR")  
+    if arglist.constrained:
+        arglist.num_episodes_freeze_policy = arglist.num_episodes
     return arglist    
 
 def mlp_model(input, num_outputs, scope, reuse=False, num_units=64, rnn_cell=None):
@@ -156,13 +160,15 @@ def train(arglist):
         episode_step = 0
         train_step = 0
         t_start = time.time()
+        freeze_policy = False
+        update_v_constraint_only = False
         avg_q_loss = [[] for i in range(env.n)]
         if arglist.u_estimation:
             avg_u_loss = [[] for i in range(env.n)]
         avg_p_loss = [[] for i in range(env.n)]
         avg_mean_rew = [[] for i in range(env.n)]
         avg_var = [[] for i in range(env.n)]
-        if arglist.constraint_type=="CVAR":
+        if arglist.constraint_type=="CVAR" or (not arglist.constrained and update_v_constraint_only):
             avg_cvar = [[] for i in range(env.n)]
             avg_v = [[] for i in range(env.n)]
         avg_mean_q = [[] for i in range(env.n)]
@@ -170,7 +176,6 @@ def train(arglist):
         if arglist.constrained:
             avg_lamda = [[] for i in range(env.n)]
         print('Starting iterations...')
-        freeze_policy = False
         while True:
             # get action
             action_n = [agent.action(obs) for agent, obs in zip(trainers,obs_n)]
@@ -234,15 +239,16 @@ def train(arglist):
             loss = None
             for agent in trainers:
                 agent.preupdate()
+            cvars = []
             for index,agent in enumerate(trainers):
-                returned = agent.update(trainers, train_step, freeze_policy)
+                returned = agent.update(trainers, train_step, update_v_constraint_only, freeze_policy)
                 if returned is None:    
                     #print ( 'returned None')
                     continue
-                q_loss, u_loss, _, p_loss, mean_rew, var, cvar, lamda, v, mean_q, std_q = returned
+                q_loss, u_loss, _, p_loss, _, mean_rew, var, cvar, lamda, v, mean_q, std_q = returned
                 episode_variance[-1] += max(0,var)
                 agent_variance[index][-1] += max(0,var) 
-                if arglist.constraint_type=="CVAR":
+                if arglist.constraint_type=="CVAR" or (not arglist.constrained and update_v_constraint_only):
                     episode_cvar[-1] += cvar
                     agent_cvar[index][-1] += cvar
                 avg_q_loss[index].append(q_loss)
@@ -251,13 +257,15 @@ def train(arglist):
                 avg_p_loss[index].append(p_loss)
                 avg_mean_rew[index].append(mean_rew)
                 avg_var[index].append(max(0,var))
-                if arglist.constraint_type=="CVAR":
+                if arglist.constraint_type=="CVAR" or (not arglist.constrained and update_v_constraint_only):
                     avg_cvar[index].append(cvar)
                     avg_v[index].append(v)
                 avg_mean_q[index].append(mean_q)
                 avg_std_q[index].append(std_q)
                 if arglist.constrained:    
                     avg_lamda[index].append(lamda)
+                cvars.append(cvar)
+            cvars = []
             # save model, display training output
             if terminal and len(episode_rewards)>0 and (len(episode_rewards) % arglist.save_rate == 0):
                 U.save_state(arglist.save_dir, saver=saver)
@@ -288,7 +296,7 @@ def train(arglist):
                     avg_p_loss[agent_index] = np.asarray(avg_p_loss[agent_index])
                     avg_mean_rew[agent_index] = np.asarray(avg_mean_rew[agent_index])
                     avg_var[agent_index] = np.asarray(avg_var[agent_index])
-                    if arglist.constraint_type=="CVAR":
+                    if arglist.constraint_type=="CVAR" or (not arglist.constrained and update_v_constraint_only):
                         avg_cvar[agent_index] = np.asarray(avg_cvar[agent_index])
                         avg_v[agent_index] = np.asarray(avg_v[agent_index])
                     avg_mean_q[agent_index] = np.asarray(avg_mean_q[agent_index])
@@ -303,26 +311,31 @@ def train(arglist):
                                 np.mean(avg_var[agent_index]), np.mean(avg_cvar[agent_index]), np.mean(avg_v[agent_index]),
                                 np.mean(avg_mean_q[agent_index]), np.mean(avg_std_q[agent_index]), np.mean(avg_lamda[agent_index])))
                         else:
-                            print('Running avgs for agent {}: q_loss: {}, p_loss: {}, mean_rew: {}, variance: {}, cvar: {}, mean_q: {}, std_q: {}, lamda: {}'.format(
+                            print('Running avgs for agent {}: q_loss: {}, p_loss: {}, mean_rew: {}, variance: {}, cvar: {}, v: {}, mean_q: {}, std_q: {}, lamda: {}'.format(
                                 agent_index, np.mean(avg_q_loss[agent_index]), np.mean(avg_p_loss[agent_index]), 
                                 np.mean(avg_mean_rew[agent_index]), np.mean(avg_var[agent_index]), 
-                                np.mean(avg_cvar[agent_index]), np.mean(avg_mean_q[agent_index]), np.mean(avg_std_q[agent_index]), np.mean(avg_lamda[agent_index])))
+                                np.mean(avg_cvar[agent_index]), np.mean(avg_v[agent_index]), np.mean(avg_mean_q[agent_index]), np.mean(avg_std_q[agent_index]), np.mean(avg_lamda[agent_index])))
                     elif arglist.constrained and arglist.constraint_type=="Exp_Var":    
                         print('Running avgs for agent {}: q_loss: {}, p_loss: {}, mean_rew: {}, variance: {}, lamda: {}'.format(
                             agent_index, np.mean(avg_q_loss[agent_index]), np.mean(avg_p_loss[agent_index]), 
                             np.mean(avg_mean_rew[agent_index]), np.mean(avg_var[agent_index]), np.mean(avg_lamda[agent_index])))
-                    else:
+                    elif not update_v_constraint_only:
                       print('Running avgs for agent {}: q_loss: {}, p_loss: {}, mean_rew: {}, variance: {}, mean_q: {}, std_q: {}'.format(
                             agent_index, np.mean(avg_q_loss[agent_index]), np.mean(avg_p_loss[agent_index]), 
                             np.mean(avg_mean_rew[agent_index]), np.mean(avg_var[agent_index]),
                             np.mean(avg_mean_q[agent_index]), np.mean(avg_std_q[agent_index])))
+                    else:
+                      print('Running avgs for agent {}: q_loss: {}, p_loss: {}, mean_rew: {}, variance: {}, cvar: {}, v: {}, mean_q: {}, std_q: {}'.format(
+                            agent_index, np.mean(avg_q_loss[agent_index]), np.mean(avg_p_loss[agent_index]), 
+                            np.mean(avg_mean_rew[agent_index]), np.mean(avg_var[agent_index]), np.mean(avg_cvar[agent_index]),
+                            np.mean(avg_v[agent_index]), np.mean(avg_mean_q[agent_index]), np.mean(avg_std_q[agent_index])))  
                     avg_q_loss[agent_index] = []
                     if arglist.u_estimation:
                         avg_u_loss[agent_index] = []
                     avg_p_loss[agent_index] = []
                     avg_mean_rew[agent_index] = []
                     avg_var[agent_index] = []
-                    if arglist.constraint_type=="CVAR":
+                    if arglist.constraint_type=="CVAR" or (not arglist.constrained and update_v_constraint_only):
                         avg_cvar[agent_index] = []
                         avg_v[agent_index] = []    
                     avg_mean_q[agent_index] = []
@@ -341,9 +354,43 @@ def train(arglist):
                     final_ep_ag_variance.append(np.mean(var[-arglist.save_rate:]))
                 for cvar in agent_cvar:
                     final_ep_ag_cvar.append(np.mean(cvar[-arglist.save_rate:]))
-
-            # saves final episode reward for plotting training curve later
             if len(episode_rewards) > arglist.num_episodes:
+                if not arglist.constrained and not update_v_constraint_only:
+                    print('...Finished total of {} episodes... Now freezing policy and running for {} more episodes to get cvar estimation'.format(len(episode_rewards), (arglist.num_episodes_freeze_policy-arglist.num_episodes)))
+                    update_v_constraint_only = True
+                    episode_rewards = [0.0]  # sum of rewards for all agents
+                    agent_rewards = [[0.0] for _ in range(env.n)]  # individual agent reward
+                    final_ep_rewards = []  # sum of rewards for training curve
+                    final_ep_ag_rewards = []  # agent rewards for training curve
+                    episode_variance = [0.0]
+                    agent_variance = [[0.0] for _ in range(env.n)] 
+                    final_ep_variance = []
+                    final_ep_ag_variance = []
+                    episode_cvar = [0.0]
+                    agent_cvar = [[0.0] for _ in range(env.n)]
+                    final_ep_cvar = []
+                    final_ep_ag_cvar = []
+                    agent_info = [[[]]]  # placeholder for benchmarking info               
+                    avg_q_loss = [[] for i in range(env.n)]
+                    if arglist.u_estimation:
+                        avg_u_loss = [[] for i in range(env.n)]
+                    avg_p_loss = [[] for i in range(env.n)]
+                    avg_mean_rew = [[] for i in range(env.n)]
+                    avg_var = [[] for i in range(env.n)]
+                    if arglist.constraint_type=="CVAR" or not arglist.constrained:
+                        avg_cvar = [[] for i in range(env.n)]
+                        avg_v = [[] for i in range(env.n)]
+                    avg_mean_q = [[] for i in range(env.n)]
+                    avg_std_q = [[] for i in range(env.n)]
+                    if arglist.constrained:
+                        avg_lamda = [[] for i in range(env.n)]
+                    obs_n = env.reset()
+                    episode_step = 0
+                    train_step = 0
+                    for agent in trainers:
+                        agent.clear_buffer()
+            # saves final episode reward for plotting training curve later
+            if len(episode_rewards) > arglist.num_episodes_freeze_policy:
                 param_file_name = arglist.plots_dir + arglist.exp_name + '_params.json'
                 json.dump(vars(arglist), open(param_file_name, 'w'))
                 rew_file_name = arglist.plots_dir + arglist.exp_name + '_rewards.pkl'
@@ -386,8 +433,9 @@ def train(arglist):
                 avg_p_loss = [[] for i in range(env.n)]
                 avg_mean_rew = [[] for i in range(env.n)]
                 avg_var = [[] for i in range(env.n)]
-                if arglist.constraint_type=="CVAR":
+                if arglist.constraint_type=="CVAR" or not arglist.constrained:
                     avg_cvar = [[] for i in range(env.n)]
+                    avg_v = [[] for i in range(env.n)]
                 avg_mean_q = [[] for i in range(env.n)]
                 avg_std_q = [[] for i in range(env.n)]
                 if arglist.constrained:

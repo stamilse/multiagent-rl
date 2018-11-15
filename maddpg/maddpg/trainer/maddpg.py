@@ -85,8 +85,8 @@ def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, opti
     with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
         if constrained:
             lamda_constraint = tf.get_variable('lamda_constraint'+str(q_index), [1], initializer = tf.constant_initializer(1.0), dtype = tf.float32)
-            if constraint_type=="CVAR":
-                v_constraint = tf.get_variable('v_constraint'+str(q_index), [1], initializer = tf.constant_initializer(1.0), dtype = tf.float32)
+        if not constrained or constraint_type=="CVAR":
+            v_constraint = tf.get_variable('v_constraint'+str(q_index), [1], initializer = tf.constant_initializer(1.0), dtype = tf.float32)
         # create distribtuions
         act_pdtype_n = [make_pdtype(act_space) for act_space in act_space_n]
         # set up placeholders
@@ -108,21 +108,22 @@ def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, opti
             var = u - tf.square(q)
         else:
             var = tf.square(rew + target_ph) - tf.square(q)
+        if not constrained or constraint_type=="CVAR":
+            cvar = v_constraint + (1.0/(1.0-cvar_beta))*tf.reduce_mean(tf.nn.relu(q - v_constraint))
+            cvar_loss = tf.reduce_mean(cvar) 
+            
         if constrained:    
             if constraint_type=="Exp_Var":
                 #print ('In constraint generation with lamda alpha')
                 constraint = lamda_constraint*(var - exp_var_alpha)
-                q_loss = tf.reduce_mean(tf.square(q - (target_ph + rew - constraint)))
+                q_loss = tf.reduce_mean(tf.square((target_ph + rew + constraint) - q))
             elif constraint_type=="CVAR":
-                cvar = v_constraint + (1.0/(1.0+cvar_alpha))*tf.reduce_mean(tf.nn.relu(q - v_constraint))
-                if agent_type=="adversary":
-                    constraint = lamda_constraint*(cvar - cvar_beta)
-                elif agent_type=="good":
-                    constraint = lamda_constraint*(cvar_beta - cvar)
-                q_loss = tf.reduce_mean(tf.square(q - (target_ph + rew - constraint)))                      
+                constraint = lamda_constraint*(cvar_alpha - cvar)   
+                q_loss = tf.reduce_mean(tf.square((target_ph + rew + constraint) - q))                   
         else:
             q_loss = tf.reduce_mean(tf.square(q - (target_ph + rew))) 
             
+           
         q_func_vars = U.scope_vars(U.absolute_scope_name("q_func"))
         if u_estimation:
             u_func_vars = U.scope_vars(U.absolute_scope_name("u_func"))
@@ -130,23 +131,19 @@ def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, opti
         
         # viscosity solution to Bellman differential equation in place of an initial condition
         q_reg = tf.reduce_mean(tf.square(q))
+        train3 = None
         if u_estimation:
                 loss = q_loss + u_loss #+ 1e-3 * q_reg
                 optimize_expr = U.minimize_and_clip(optimizer, loss, q_func_vars+u_func_vars, grad_norm_clipping)
                 train = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [target_ph_u] + [rew], outputs=[q_loss, u_loss], updates=[optimize_expr])
                 var_fn = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [target_ph_u] + [rew], outputs=var)
-        elif constraint_type=="CVAR":
-            loss = q_loss
-            optimize_expr = U.minimize_and_clip(optimizer, loss, q_func_vars + [v_constraint], grad_norm_clipping)
-            train = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [rew], outputs=q_loss, updates=[optimize_expr])
-            cvar_fn = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [rew], outputs=cvar)
-            var_fn = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [rew], outputs=var)
         else:
             #print ('in loss minimization over q_func_vars')
             loss = q_loss
             optimize_expr = U.minimize_and_clip(optimizer, loss, q_func_vars, grad_norm_clipping)
             train = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [rew], outputs=q_loss, updates=[optimize_expr])
             var_fn = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [rew], outputs=var)
+              
         #loss = loss + 1e-4*q_reg    
         # Create callable functions
         
@@ -174,7 +171,13 @@ def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, opti
                 train2 = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [target_ph_u] + [rew], outputs=loss2, updates=[optimize_expr2])
             else:
                 train2 = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [rew], outputs=loss2, updates=[optimize_expr2])
-                    
+        if not constrained or constraint_type=="CVAR":
+            loss = cvar_loss
+            optimize_expr3 = U.minimize_and_clip(optimizer, loss, [v_constraint], grad_norm_clipping)
+            train3 = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [rew], outputs=loss, updates=[optimize_expr3])
+            cvar_fn = U.function(inputs=obs_ph_n + act_ph_n + [target_ph] + [rew], outputs=cvar)
+          
+            
         if not u_estimation:    
             update_target_u = None
             target_u_values = None
@@ -182,10 +185,10 @@ def q_train(make_obs_ph_n, act_space_n, q_index, q_func, u_func, optimizer, opti
         if not constrained:
             train2 = None
             lamda_constraint = None
-        if constraint_type!="CVAR":
+        if constraint_type!="CVAR" and constrained:
             cvar_fn = None
             v_constraint = None
-        return train, train2, update_target_q, update_target_u, {'q_values': q_values, 'u_values': u_values, 'target_q_values': target_q_values, 'target_u_values': target_u_values, 'var':var_fn, 'cvar':cvar_fn, 'lamda_constraint':lamda_constraint, 'v_constraint':v_constraint, 'optimize_expr':optimize_expr}
+        return train, train2, train3, update_target_q, update_target_u, {'q_values': q_values, 'u_values': u_values, 'target_q_values': target_q_values, 'target_u_values': target_u_values, 'var':var_fn, 'cvar':cvar_fn, 'lamda_constraint':lamda_constraint, 'v_constraint':v_constraint, 'optimize_expr':optimize_expr}
            
 class MADDPGAgentTrainer(AgentTrainer):
     def __init__(self, name, model, obs_shape_n, act_space_n, agent_index, args, agent_type, local_q_func=False):
@@ -205,7 +208,7 @@ class MADDPGAgentTrainer(AgentTrainer):
         for i in range(self.n):
             obs_ph_n.append(U.BatchInput(obs_shape_n[i], name="observation"+str(i)).get())
         # Create all the functions necessary to train the model
-        self.q_train, self.q_train2, self.q_update, self.u_update, self.q_debug = q_train(
+        self.q_train, self.q_train2, self.q_train3, self.q_update, self.u_update, self.q_debug = q_train(
                 scope=self.name,
                 make_obs_ph_n=obs_ph_n,
                 act_space_n=act_space_n,
@@ -256,7 +259,7 @@ class MADDPGAgentTrainer(AgentTrainer):
     def preupdate(self):
         self.replay_sample_index = None
 
-    def update(self, agents, t, frozen=False):
+    def update(self, agents, t, update_v_constraint_only=False, frozen=False):
         if len(self.replay_buffer) < self.max_replay_buffer_len: # replay buffer is not large enough
             return
         if not t % 100 == 0:  # only update every 100 steps
@@ -289,7 +292,7 @@ class MADDPGAgentTrainer(AgentTrainer):
         target_q /= num_sample
         if self.u_estimation:
             target_u/= num_sample
-        if not frozen:    
+        if not frozen and not update_v_constraint_only:    
             if self.u_estimation:
                 q_loss, u_loss = self.q_train(*(obs_n + act_n + [target_q] + [target_u] + [rew]))
                 if self.constrained:
@@ -306,13 +309,18 @@ class MADDPGAgentTrainer(AgentTrainer):
             self.q_update()
             if self.u_estimation:
                 self.u_update()
+        if self.constraint_type=="CVAR" or (update_v_constraint_only and not self.constrained and not frozen):
+            cvar_loss = self.q_train3(*(obs_n + act_n + [target_q] + [rew]))
+            cvar_loss_mean = np.asarray(cvar_loss).mean()
+        else:
+            cvar_loss_mean = 0.0
         if self.constrained:    
             lamda_constraint=np.array(self.q_debug['lamda_constraint'].eval()).mean()
             if lamda_constraint<=0:
                 print("Value of Lamda violated",lamda_constraint)
         else:
             lamda_constraint = 0.0   
-        if self.constraint_type=="CVAR":
+        if self.constraint_type=="CVAR" or (update_v_constraint_only and not self.constrained):
             v_constraint=np.array(self.q_debug['v_constraint'].eval()).mean()
         else:
             v_constraint = 0.0
@@ -320,8 +328,9 @@ class MADDPGAgentTrainer(AgentTrainer):
             var_rew = np.array(self.q_debug['var'](*(obs_n + act_n + [target_q] + [target_u] + [rew]))).mean()
         else:    
             var_rew = np.array(self.q_debug['var'](*(obs_n + act_n + [target_q] + [rew]))).mean()
-        if self.constrained and self.constraint_type=="CVAR":
+        if (not self.constrained and update_v_constraint_only) or self.constraint_type=="CVAR":
             cvar = np.array(self.q_debug['cvar'](*(obs_n + act_n + [target_q] + [rew]))).mean()
+            #print ('cvar for ', self.agent_index, ' is',cvar)
         else:
             cvar = 0.0
         #tvars = tf.trainable_variables()
@@ -329,7 +338,7 @@ class MADDPGAgentTrainer(AgentTrainer):
         
         #for var, val in zip(tvars, tvars_vals):
         #    print("TF variable name",var.name)
-        if not frozen:
+        if not frozen and not update_v_constraint_only:
             q_loss_mean = np.asarray(q_loss).mean()
             if self.u_estimation:
                 u_loss_mean = np.asarray(u_loss).mean()
@@ -340,6 +349,8 @@ class MADDPGAgentTrainer(AgentTrainer):
                 q_loss2_mean = np.asarray(q_loss2).mean()
             else:
                 q_loss2_mean = 0.0
+            if not self.constraint_type=="CVAR":    
+                cvar_loss_mean = 0.0    
         else:
             q_loss_mean = 0.0
             u_loss_mean = 0.0
@@ -349,5 +360,5 @@ class MADDPGAgentTrainer(AgentTrainer):
         #print ('q_values', q_values.shape)
         mean_q_values = np.mean(q_values)
         std_q_values = np.std(q_values)
-        return [q_loss_mean, u_loss_mean, q_loss2_mean, p_loss_mean, np.mean(rew), var_rew, cvar, lamda_constraint, v_constraint, mean_q_values, std_q_values]
+        return [q_loss_mean, u_loss_mean, q_loss2_mean, p_loss_mean, cvar_loss_mean, np.mean(rew), var_rew, cvar, lamda_constraint, v_constraint, mean_q_values, std_q_values]
          
