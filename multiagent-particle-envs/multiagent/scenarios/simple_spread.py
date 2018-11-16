@@ -4,7 +4,7 @@ from multiagent.scenario import BaseScenario
 
 
 class Scenario(BaseScenario):
-    def make_world(self, num_agents_inpt=2):
+    def make_world(self, num_agents_inpt=2, num_adversaries_inpt=0):
         world = World()
         # set any world properties first
         world.dim_c = 2
